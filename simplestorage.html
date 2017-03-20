@@ -1,5 +1,92 @@
+<!DOCTYPE html>
 <html>
+<head>
+  <meta charset="UTF-8">
+  <title>Simple Storage Dapp 예제 </title>
+</head>
 <body>
-<h1>My Simple Storage dApp</h1>
+<h1>Simple Storage dApp 예제 by Atomrigs</h1>
+<ul>
+  <li>컨트랙트 주소: <span id="contractAddr"></span></li>
+  <li>내 어카운트 주소: <span id="accountAddr"></span></li>
+  <li>컨트랙트에 저장된 값: <span id="storedData" style="font-size:300%; margin-right:10px;"></span>
+    <button onclick="getValue()">새로고침</button> (현재블럭: <span id="lastBlock"></span>)</li>
+  <li><input id="newValue" type="text"><button onclick="setValue()">새 값으로 저장하기</button>
+      <div id="result"></div>
+  </li>
+</ul>
+
 </body>
+<script src="https://cdn.rawgit.com/ethereum/web3.js/develop/dist/web3.js"></script>
+<script src="https://code.jquery.com/jquery-3.1.1.slim.min.js"></script>
+<script>
+var contractAddress = '0xc5244053ecA508a11951400fc7Af28738Fd0ce77';
+var abi = [{"constant":false,"inputs":[{"name":"x","type":"uint256"}],"name":"set","outputs":[],"payable":false,"type":"function"},{"constant":true,"inputs":[],"name":"get","outputs":[{"name":"","type":"uint256"}],"payable":false,"type":"function"}];
+var simpleStorageContract;
+var simpleStorage;
+
+window.addEventListener('load', function() {
+
+  // Checking if Web3 has been injected by the browser (Mist/MetaMask)
+  if (typeof web3 !== 'undefined') {
+    // Use Mist/MetaMask's provider
+    window.web3 = new Web3(web3.currentProvider);
+  } else {
+    console.log('No web3? You should consider trying MetaMask!')
+    // fallback - use your fallback strategy (local node / hosted node + in-dapp id mgmt / fail)
+    window.web3 = new Web3(new Web3.providers.HttpProvider("http://localhost:8545"));
+  }
+
+  // Now you can start your app & access web3 freely:
+  startApp();
+})
+
+
+function startApp() {
+  simpleStorageContract = web3.eth.contract(abi);
+  simpleStorage = simpleStorageContract.at(contractAddress);
+  document.getElementById('contractAddr').innerHTML = getLink(contractAddress);
+  web3.eth.getAccounts(function(e,r){
+    document.getElementById('accountAddr').innerHTML = getLink(r[0]);
+  })
+
+  getValue();
+}
+
+function getValue() {
+  simpleStorage.get(function(e,r){
+    document.getElementById('storedData').innerHTML=r.toNumber();
+    updateBlock();
+  });
+}
+
+function setValue() {
+
+  var newValue = document.getElementById('newValue').value;
+  simpleStorage.set(newValue, function(e,r){
+    document.getElementById('result').innerHTML = 'Transaction id: <span id="pending" style="color:red;">(Pending) </span>' + r;
+  });
+  var filter = web3.eth.filter('latest');
+  filter.watch(function(e, r) {
+    getValue();
+    var updatedValue = document.getElementById('storedData').innerHTML;
+    if (updatedValue == newValue) {
+      document.getElementById('pending').innerHTML = '';
+      document.getElementById('storedData').style.cssText ="color:green; font-size:300%;"
+      filter.stopWatching();
+    }
+  });
+}
+
+function getLink(addr) {
+  return '<a target="_blank" href=https://testnet.etherscan.io/address/' + addr + '>' + addr +'</a>';
+}
+
+function updateBlock() {
+  web3.eth.getBlockNumber(function(e,r){
+    document.getElementById('lastBlock').innerHTML = r;
+  })
+}
+
+</script>
 </html>
