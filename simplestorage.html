@@ -26,12 +26,12 @@
 
 HTML 소스<br>
 <a href="https://github.com/atomrigs/atomrigs.github.io/blob/master/simplestorage.html">https://github.com/atomrigs/atomrigs.github.io/blob/master/simplestorage.html</a>
-
+<br>
 <p>
 <a href="http://www.chaintalk.io/archive/lecture?sca=%EB%82%98%EB%8F%84+dApp+%EA%B0%9C%EB%B0%9C"><i>나도 dApp 개발해 보자 시리즈 by Atomrigs © 2017</i></a>
 </p>
+
 </body>
-  
 <script src="https://cdn.rawgit.com/ethereum/web3.js/develop/dist/web3.js"></script>
 <!-- script src="https://code.jquery.com/jquery-3.1.1.slim.min.js"></script -->
 <script>
@@ -62,23 +62,27 @@ function startApp() {
   web3.eth.getAccounts(function(e,r){
     document.getElementById('accountAddr').innerHTML = getLink(r[0]);
   })
+
   getValue();
 }
-  
+
 function getLink(addr) {
   return '<a target="_blank" href=https://testnet.etherscan.io/address/' + addr + '>' + addr +'</a>';
-}  
+}
 
 function getValue() {
   simpleStorage.get(function(e,r){
     document.getElementById('storedData').innerHTML=r.toNumber();
+
   });
   web3.eth.getBlockNumber(function(e,r){
     document.getElementById('lastBlock').innerHTML = r;
-  });  
+  });
 }
 
 function setValue() {
+
+  var newValue = document.getElementById('newValue').value;
   var txid
   simpleStorage.set(newValue, function(e,r){
     document.getElementById('result').innerHTML = 'Transaction id: ' + r + '<span id="pending" style="color:red;">(Pending)</span>';
@@ -91,12 +95,12 @@ function setValue() {
       if (r != null && r.blockNumber > 0) {
         document.getElementById('pending').innerHTML = '(기록된 블록: ' + r.blockNumber + ')';
         document.getElementById('pending').style.cssText ='color:green;';
-        document.getElementById('storedData').style.cssText ='color:green; font-size:300%;'
+        document.getElementById('storedData').style.cssText ='color:green; font-size:300%;';
         filter.stopWatching();
       }
    });
  });
 }
- 
+
 </script>
 </html>
