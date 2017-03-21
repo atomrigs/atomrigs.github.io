@@ -2,23 +2,38 @@
 <html>
 <head>
   <meta charset="UTF-8">
+  <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/milligram/1.2.3/milligram.min.css">
   <title>Simple Storage Dapp 예제 </title>
+  <style>
+    #storedData {font-size:300%; margin-right:10px;}
+    #newValue {width: 200px; margin-right:10px; text-align:right;}
+  </style>
 </head>
 <body>
-<h1>Simple Storage dApp 예제 by Atomrigs</h1>
+<h3>Simple Storage dApp 예제</h3>
 <ul>
   <li>컨트랙트 주소: <span id="contractAddr"></span></li>
   <li>내 어카운트 주소: <span id="accountAddr"></span></li>
-  <li>컨트랙트에 저장된 값: <span id="storedData" style="font-size:300%; margin-right:10px;"></span>
-    <button onclick="getValue()">새로고침</button> (현재블럭: <span id="lastBlock"></span>)</li>
+  <li>컨트랙트에 저장된 값: <span id="storedData"></span>
+    <button onclick="getValue()">새로고침</button> (현재블록: <span id="lastBlock"></span>)</li>
   <li><input id="newValue" type="text"><button onclick="setValue()">새 값으로 저장하기</button>
       <div id="result"></div>
   </li>
 </ul>
 
+컨트랙트 소스
+<script src="https://gist.github.com/atomrigs/7c633570496b79623bed5d1286f93f3a.js"></script>
+
+HTML 소스<br>
+<a href="https://github.com/atomrigs/atomrigs.github.io/blob/master/simplestorage.html">https://github.com/atomrigs/atomrigs.github.io/blob/master/simplestorage.html</a>
+
+<p>
+<a href="http://www.chaintalk.io/archive/lecture?sca=%EB%82%98%EB%8F%84+dApp+%EA%B0%9C%EB%B0%9C"><i>나도 dApp 개발해 보자 시리즈 by Atomrigs © 2017</i></a>
+</p>
 </body>
+  
 <script src="https://cdn.rawgit.com/ethereum/web3.js/develop/dist/web3.js"></script>
-<script src="https://code.jquery.com/jquery-3.1.1.slim.min.js"></script>
+<!-- script src="https://code.jquery.com/jquery-3.1.1.slim.min.js"></script -->
 <script>
 var contractAddress = '0xc5244053ecA508a11951400fc7Af28738Fd0ce77';
 var abi = [{"constant":false,"inputs":[{"name":"x","type":"uint256"}],"name":"set","outputs":[],"payable":false,"type":"function"},{"constant":true,"inputs":[],"name":"get","outputs":[{"name":"","type":"uint256"}],"payable":false,"type":"function"}];
@@ -36,11 +51,9 @@ window.addEventListener('load', function() {
     // fallback - use your fallback strategy (local node / hosted node + in-dapp id mgmt / fail)
     window.web3 = new Web3(new Web3.providers.HttpProvider("http://localhost:8545"));
   }
-
   // Now you can start your app & access web3 freely:
   startApp();
 })
-
 
 function startApp() {
   simpleStorageContract = web3.eth.contract(abi);
@@ -49,44 +62,41 @@ function startApp() {
   web3.eth.getAccounts(function(e,r){
     document.getElementById('accountAddr').innerHTML = getLink(r[0]);
   })
-
   getValue();
 }
+  
+function getLink(addr) {
+  return '<a target="_blank" href=https://testnet.etherscan.io/address/' + addr + '>' + addr +'</a>';
+}  
 
 function getValue() {
   simpleStorage.get(function(e,r){
     document.getElementById('storedData').innerHTML=r.toNumber();
-    updateBlock();
   });
+  web3.eth.getBlockNumber(function(e,r){
+    document.getElementById('lastBlock').innerHTML = r;
+  });  
 }
 
 function setValue() {
-
-  var newValue = document.getElementById('newValue').value;
+  var txid
   simpleStorage.set(newValue, function(e,r){
-    document.getElementById('result').innerHTML = 'Transaction id: <span id="pending" style="color:red;">(Pending) </span>' + r;
+    document.getElementById('result').innerHTML = 'Transaction id: ' + r + '<span id="pending" style="color:red;">(Pending)</span>';
+    txid = r;
   });
   var filter = web3.eth.filter('latest');
   filter.watch(function(e, r) {
     getValue();
-    var updatedValue = document.getElementById('storedData').innerHTML;
-    if (updatedValue == newValue) {
-      document.getElementById('pending').innerHTML = '';
-      document.getElementById('storedData').style.cssText ="color:green; font-size:300%;"
-      filter.stopWatching();
-    }
-  });
+    web3.eth.getTransaction(txid, function(e,r){
+      if (r != null && r.blockNumber > 0) {
+        document.getElementById('pending').innerHTML = '(기록된 블록: ' + r.blockNumber + ')';
+        document.getElementById('pending').style.cssText ='color:green;';
+        document.getElementById('storedData').style.cssText ='color:green; font-size:300%;'
+        filter.stopWatching();
+      }
+   });
+ });
 }
-
-function getLink(addr) {
-  return '<a target="_blank" href=https://testnet.etherscan.io/address/' + addr + '>' + addr +'</a>';
-}
-
-function updateBlock() {
-  web3.eth.getBlockNumber(function(e,r){
-    document.getElementById('lastBlock').innerHTML = r;
-  })
-}
-
+ 
 </script>
 </html>
