@@ -55,7 +55,7 @@ window.addEventListener('load', function() {
   }
   // Now you can start your app & access web3 freely:
   startApp();
-})
+});
 
 function startApp() {
   simpleStorageContract = web3.eth.contract(abi);
@@ -63,7 +63,7 @@ function startApp() {
   document.getElementById('contractAddr').innerHTML = getLink(contractAddress);
   web3.eth.getAccounts(function(e,r){
     document.getElementById('accountAddr').innerHTML = getLink(r[0]);
-  })
+  });
 
   getValue();
 }
